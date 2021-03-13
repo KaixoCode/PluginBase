@@ -16,8 +16,8 @@ add_library(EffectBase STATIC
 )
 
 target_include_directories(EffectBase PUBLIC
-  libs/json/include
-  include/
+  ${EB_SRC}libs/json/include
+  ${EB_SRC}include/
 )
 
 set_target_properties(EffectBase PROPERTIES LINKER_LANGUAGE CXX)
