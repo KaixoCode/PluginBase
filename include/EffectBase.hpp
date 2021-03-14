@@ -69,7 +69,7 @@ namespace Effects
 	struct Div : public Object
 	{
 		/**
-		 * When CellSize is set to AUTO (-1), the layout interpretter will equally divide
+		 * When DivSize is set to AUTO (-1), the layout interpretter will equally divide
 		 * available space between all Divs marked AUTO within a Div.
 		 */
 		static inline int AUTO = -1;
