@@ -766,7 +766,7 @@ namespace Effects
 		/**
 		 * This is called each frame.
 		 */
-		virtual void Update() = 0;
+		virtual void Update() {};
 
 		/**
 		 * Generate the next sample.
