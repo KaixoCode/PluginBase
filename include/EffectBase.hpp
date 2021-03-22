@@ -19,6 +19,16 @@ namespace Effects
 	};
 
 	/**
+	 * Datatype for a midi link with a parameter.
+	 */
+	struct MidiCCLink
+	{
+		int channel, control, device;
+
+		bool operator==(const MidiCCLink& other) { return channel == other.channel && control == other.control && device == other.device; }
+	};
+
+	/**
 	 * Parameter types.
 	 */
 	enum class ParameterType
@@ -56,6 +66,9 @@ namespace Effects
 		 * @return position
 		 */
 		virtual auto Position() -> Pair<int> { return m_Position; }
+
+		virtual operator nlohmann::json() { return nlohmann::json::object(); };
+		virtual void operator=(nlohmann::json json) {};
 
 	private:
 		Pair<int> m_Size{ 30, 30 }, m_Position{ 0, 0 };
@@ -413,6 +426,37 @@ namespace Effects
 		 */
 		virtual auto Type() -> ParameterType { return m_Type; }
 
+		/**
+		 * Link this Parameter to a midi control.
+		 * @param l midilink
+		 */
+		virtual void MidiLink(const MidiCCLink& l) { m_MidiLink = l; }
+
+		/**
+		 * Get the midilink of this Parameter;
+		 * @return midilink
+		 */
+		virtual auto MidiLink() -> MidiCCLink& { return m_MidiLink; }
+
+		operator nlohmann::json() override
+		{
+			nlohmann::json _json;
+			_json["value"] = m_Value;
+			_json["midilink"] = nlohmann::json::array();
+			_json["midilink"] += m_MidiLink.channel;
+			_json["midilink"] += m_MidiLink.control;
+			_json["midilink"] += m_MidiLink.device;
+			return _json;
+		}
+
+		void operator=(nlohmann::json json) override
+		{
+			m_Value = json.at("value").get<double>();
+			m_MidiLink.channel = json.at("midilink")[0].get<int>();
+			m_MidiLink.control = json.at("midilink")[1].get<int>();
+			m_MidiLink.device = json.at("midilink")[2].get<int>();
+		}
+
 	protected:
 		int m_Decimals = 1;
 
@@ -427,6 +471,8 @@ namespace Effects
 			m_DisplayValue = true,
 			m_DisplayName = true,
 			m_Disabled = false;
+
+		MidiCCLink m_MidiLink{ 0, 0, 0 };
 
 		std::string m_Name;
 		std::unordered_map<int, std::string> m_Units;
@@ -558,6 +604,18 @@ namespace Effects
 		 */
 		auto Options() -> std::vector<Option>& { return m_Options; }
 
+		operator nlohmann::json() override
+		{
+			nlohmann::json _json;
+			_json["selected"] = m_Selected;
+			return _json;
+		}
+
+		void operator=(nlohmann::json json) override
+		{
+			Select(json.at("selected").get<int>());
+		}
+
 	private:
 		int m_Selected = -1;
 		std::vector<Option> m_Options;
@@ -600,6 +658,18 @@ namespace Effects
 		 * The state of this toggle button.
 		 */
 		bool state = false;
+
+		operator nlohmann::json() override
+		{
+			nlohmann::json _json;
+			_json["state"] = state;
+			return _json;
+		}
+
+		void operator=(nlohmann::json json) override
+		{
+			State(json.at("state").get<bool>());
+		}
 
 	private:
 		std::string m_Name;
@@ -657,6 +727,18 @@ namespace Effects
 		 * This is simply exposed so the Gui component can directly link with this boolean.
 		 */
 		bool selected = false;
+
+		operator nlohmann::json() override
+		{
+			nlohmann::json _json;
+			_json["selected"] = selected;
+			return _json;
+		}
+
+		void operator=(nlohmann::json json) override
+		{
+			Selected(json.at("selected").get<bool>());
+		}
 
 	private:
 		int m_Id;
@@ -731,6 +813,34 @@ namespace Effects
 				levels.push_back(0);
 		}
 
+		operator nlohmann::json() override
+		{
+			nlohmann::json _json;
+			_json["expanderThreshhold"] = expanderThreshhold;
+			_json["compressThreshhold"] = compressThreshhold;
+			_json["expanderRatio"] = expanderRatio;
+			_json["compressRatio"] = compressRatio;
+			_json["attms"] = attms;
+			_json["relms"] = relms;
+			_json["pregain"] = pregain;
+			_json["postgain"] = postgain;
+			_json["mix"] = mix;
+			return _json;
+		}
+
+		void operator=(nlohmann::json json) override
+		{
+			expanderThreshhold = json.at("expanderThreshhold").get<double>();
+			compressThreshhold = json.at("compressThreshhold").get<double>();
+			expanderRatio = json.at("expanderRatio").get<double>();
+			compressRatio = json.at("compressRatio").get<double>();
+			attms = json.at("attms").get<double>();
+			relms = json.at("relms").get<double>();
+			pregain = json.at("pregain").get<double>();
+			postgain = json.at("postgain").get<double>();
+			mix = json.at("mix").get<double>();
+		}
+
 	private:
 		double expanderThreshhold = -50;
 		double compressThreshhold = -10;
@@ -787,12 +897,29 @@ namespace Effects
 		/**
 		 * This operator is used to save the settings of this Effect.
 		 */
-		virtual operator nlohmann::json() = 0;
+		virtual operator nlohmann::json() 
+		{ 
+			nlohmann::json _json;
+			_json["params"] = nlohmann::json::array();
+			for (auto& i : m_EffectObjects)
+				_json["params"] += *i;
+			return _json;
+		};
 
 		/**
 		 * This operator is used to load the settings of this Effect.
 		 */
-		virtual void operator=(const nlohmann::json& json) = 0;
+		virtual void operator=(const nlohmann::json& json) 
+		{
+			int index = 0;
+			for (auto& i : json.at("params"))
+			{
+				m_EffectObjects[index]->operator=(i);
+				index++;		
+				if (index >= m_EffectObjects.size())
+					break;
+			}
+		};
 
 		/**
 		 * Set the samplerate.
