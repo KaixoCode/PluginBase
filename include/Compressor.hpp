@@ -69,12 +69,13 @@ public:
 			return 0;
 
 		float out = 0;
+		float abs = sin;
+		myabs(abs);
+		if (biggest < abs)
+			biggest = abs;
+
 		if (c != 0)
 		{
-			float abs = sin;
-			myabs(abs);
-			if (biggest < abs)
-				biggest = abs;
 			out = sin * pregain * compressMult * expanderMult * postgain;
 		}
 		else

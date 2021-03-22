@@ -1,7 +1,12 @@
 #pragma once
 #include <nlohmann/json.hpp>
+#include <iostream>
 
-#define DLLDIR  __declspec(dllexport)   // export DLL information
+#ifdef _IMPORTEFFECTBASE_
+#define DLLDIR
+#else
+#define DLLDIR __declspec(dllexport)
+#endif
 
 #define constrain(x, y, z) (x < y ? y : x > z ? z : x)
 
@@ -23,7 +28,7 @@ namespace Effects
 	 */
 	struct MidiCCLink
 	{
-		int channel, control, device;
+		int channel = -1, control = -1, device = -1;
 
 		bool operator==(const MidiCCLink& other) { return channel == other.channel && control == other.control && device == other.device; }
 	};
@@ -39,7 +44,7 @@ namespace Effects
 	/**
 	 * Basis for any Effect related object
 	 */
-	class Object
+	class DLLDIR Object
 	{
 	public:
 
@@ -334,7 +339,7 @@ namespace Effects
 		 * is non-linear.
 		 * @param v power
 		 */
-		virtual void   Power(double v) { m_Power = v; }
+		virtual void Power(double v) { m_Power = v; }
 
 		/**
 		 * Get the power to this parameter's value range.
@@ -472,7 +477,7 @@ namespace Effects
 			m_DisplayName = true,
 			m_Disabled = false;
 
-		MidiCCLink m_MidiLink{ 0, 0, 0 };
+		MidiCCLink m_MidiLink{ -1, -1, -1 };
 
 		std::string m_Name;
 		std::unordered_map<int, std::string> m_Units;
@@ -490,6 +495,12 @@ namespace Effects
 	class VolumeSlider : public Parameter
 	{
 	public:
+
+		VolumeSlider()
+		{
+			Name("Volume");
+			DisplayName(false);
+		}
 
 		/**
 		 * Set the amount of channels.
@@ -709,7 +720,7 @@ namespace Effects
 		 * Returns the id of the group of buttons this button is part of.
 		 * @return id
 		 */
-		int  Id() { return m_Id; }
+		int Id() { return m_Id; }
 
 		/**
 		 * Returns name
@@ -737,7 +748,8 @@ namespace Effects
 
 		void operator=(nlohmann::json json) override
 		{
-			Selected(json.at("selected").get<bool>());
+			bool s = json.at("selected").get<bool>();
+			Selected(s);
 		}
 
 	private:
@@ -844,8 +856,8 @@ namespace Effects
 	private:
 		double expanderThreshhold = -50;
 		double compressThreshhold = -10;
-		double expanderRatio = 8.0 / 1.0;
-		double compressRatio = 1.0 / 8.0;
+		double expanderRatio = 0;
+		double compressRatio = 0;
 
 		double attms = 1;
 		double relms = 100;
@@ -872,6 +884,10 @@ namespace Effects
 		EffectBase(const std::string& name) :
 			m_Name(name)
 		{};
+
+		virtual ~EffectBase() {}
+
+		virtual void Destroy() { delete this; };
 
 		/**
 		 * This is called each frame.
@@ -919,56 +935,57 @@ namespace Effects
 				if (index >= m_EffectObjects.size())
 					break;
 			}
+			Update();
 		};
 
 		/**
 		 * Set the samplerate.
 		 * @param s samplerate
 		 */
-		void SampleRate(double s) { m_SampleRate = s; }
+		virtual void SampleRate(double s) { m_SampleRate = s; }
 
 		/**
 		 * Get the samplerate.
 		 * @return samplerate
 		 */
-		double SampleRate() { return m_SampleRate; }
+		virtual double SampleRate() { return m_SampleRate; }
 
 		/**
 		 * Get the name of this Effect.
 		 * @return name
 		 */
-		auto Name() -> const std::string& { return m_Name; }
+		virtual auto Name() -> const std::string& { return m_Name; }
 
 		/**
 		 * Set the height of this Effect.
 		 * @param h height
 		 */
-		void Height(int h) { m_Height = h; }
+		virtual void Height(int h) { m_Height = h; }
 
 		/**
 		 * Get the height of this Effect.
 		 * @return height
 		 */
-		int Height() { return m_Height; }
+		virtual int Height() { return m_Height; }
 
 		/**
 		 * Get the width of this Effect.
 		 * @return width
 		 */
-		int Width() { return 300; }
+		virtual int Width() { return 300; }
 
 		/**
 		 * Get the layout Div of this Effect.
 		 * @return div
 		 */
-		auto Div() -> Effects::Div& { return m_Div; }
+		virtual auto Div() -> Effects::Div& { return m_Div; }
 
 		/**
 		 * Emplace a Parameter.
 		 * @param name name
 		 * @param type type
 		 */
-		Effects::Parameter& Parameter(const std::string& name, ParameterType type)
+		virtual Effects::Parameter& Parameter(const std::string& name, ParameterType type)
 		{
 			return dynamic_cast<Effects::Parameter&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::Parameter>(name, type)));
 		}
@@ -976,7 +993,7 @@ namespace Effects
 		/**
 		 * Emplace a DropDown.
 		 */
-		Effects::DropDown& DropDown()
+		virtual Effects::DropDown& DropDown()
 		{
 			return dynamic_cast<Effects::DropDown&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::DropDown>()));
 		}
@@ -985,7 +1002,7 @@ namespace Effects
 		 * Emplace a Toggle Button.
 		 * @param name name
 		 */
-		Effects::ToggleButton& Toggle(const std::string& name)
+		virtual Effects::ToggleButton& Toggle(const std::string& name)
 		{
 			return dynamic_cast<Effects::ToggleButton&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::ToggleButton>(name)));
 		}
@@ -993,7 +1010,7 @@ namespace Effects
 		/**
 		 * Emplace a VolumeSlider.
 		 */
-		Effects::VolumeSlider& VolumeSlider()
+		virtual Effects::VolumeSlider& VolumeSlider()
 		{
 			return dynamic_cast<Effects::VolumeSlider&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::VolumeSlider>()));
 		}
@@ -1001,7 +1018,7 @@ namespace Effects
 		/**
 		 * Emplace a DynamicsSlider.
 		 */
-		Effects::DynamicsSlider& DynamicsSlider()
+		virtual Effects::DynamicsSlider& DynamicsSlider()
 		{
 			return dynamic_cast<Effects::DynamicsSlider&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::DynamicsSlider>()));
 		}
@@ -1012,7 +1029,7 @@ namespace Effects
 		 * @param id group id
 		 * @param callback callback
 		 */
-		Effects::RadioButton& RadioButton(const std::string& name, int id, std::function<void()> callback = [] {})
+		virtual Effects::RadioButton& RadioButton(const std::string& name, int id, std::function<void()> callback = [] {})
 		{
 			return dynamic_cast<Effects::RadioButton&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::RadioButton>(name, id, callback)));
 		}
@@ -1022,7 +1039,7 @@ namespace Effects
 		 * @param p1 x-axis parameter
 		 * @param p2 y-axis parameter
 		 */
-		Effects::XYController& XYController(Effects::Parameter& p1, Effects::Parameter& p2)
+		virtual Effects::XYController& XYController(Effects::Parameter& p1, Effects::Parameter& p2)
 		{
 			return dynamic_cast<Effects::XYController&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::XYController>(p1, p2)));
 		}
@@ -1031,7 +1048,7 @@ namespace Effects
 		 * Get all objects in this Effect.
 		 * @return objects
 		 */
-		std::vector<std::unique_ptr<Effects::Object>>& Objects()
+		virtual std::vector<std::unique_ptr<Effects::Object>>& Objects()
 		{
 			return m_EffectObjects;
 		}
