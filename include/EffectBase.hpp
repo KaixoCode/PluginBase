@@ -313,12 +313,17 @@ namespace Effects
 		 * Set the reset-value of this Parameter.
 		 * @param v reset-value
 		 */
-		virtual void ResetValue(double v) { m_ResetValue = v; }
+		virtual void ResetValue(double v) { if (m_DefaultReset == NODEFAULT) m_DefaultReset = v; m_ResetValue = v; }
 
 		/**
 		 * Reset the value to the reset-value of this Parameter.
 		 */
 		virtual void ResetValue() { m_Value = Normalize(m_ResetValue); }
+
+		/**
+		 * Get the default reset value of this Parameter.
+		 */
+		virtual double DefaultReset() { return m_DefaultReset; }
 
 		/**
 		 * Set a Multiplier for the speed at which the parameter value 
@@ -447,6 +452,7 @@ namespace Effects
 		{
 			nlohmann::json _json;
 			_json["value"] = m_Value;
+			_json["default"] = m_ResetValue;
 			_json["midilink"] = nlohmann::json::array();
 			_json["midilink"] += m_MidiLink.channel;
 			_json["midilink"] += m_MidiLink.control;
@@ -457,12 +463,14 @@ namespace Effects
 		void operator=(nlohmann::json json) override
 		{
 			m_Value = json.at("value").get<double>();
+			m_ResetValue = json.at("default").get<double>();
 			m_MidiLink.channel = json.at("midilink")[0].get<int>();
 			m_MidiLink.control = json.at("midilink")[1].get<int>();
 			m_MidiLink.device = json.at("midilink")[2].get<int>();
 		}
 
 	protected:
+		static inline double NODEFAULT = 10.1343131e30;
 		int m_Decimals = 1;
 
 		Pair<double> m_Range{ 0, 100 };
@@ -470,6 +478,7 @@ namespace Effects
 		double m_Value = 0,
 			m_Power = 1,
 			m_ResetValue = 0,
+			m_DefaultReset = NODEFAULT,
 			m_Mult = 1;
 
 		bool m_Vertical = true,
