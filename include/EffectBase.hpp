@@ -1070,3 +1070,8 @@ namespace Effects
 		int m_Height = 145;
 	};
 }
+
+extern "C" DLLDIR int __cdecl Version()
+{
+	return 13;
+}
