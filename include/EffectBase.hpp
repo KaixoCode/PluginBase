@@ -1,6 +1,7 @@
 #pragma once
 #include <nlohmann/json.hpp>
 #include <iostream>
+#include "Filters.hpp"
 
 #ifdef _IMPORTEFFECTBASE_
 #define DLLDIR
@@ -353,6 +354,18 @@ namespace Effects
 		virtual double Power() { return m_Power; }
 
 		/**
+		 * Make the range of this parameter logarithmic.
+		 * @param v log
+		 */
+		virtual void Log(double v) { m_Log = v; }
+
+		/**
+		 * Get the power to this parameter's value range.
+		 * @return power
+		 */
+		virtual double Log() { return m_Log; }
+
+		/**
 		 * Is this parameter displayed/dragged vertically?
 		 */
 		virtual bool Vertical() { return m_Vertical; }
@@ -477,6 +490,7 @@ namespace Effects
 
 		double m_Value = 0,
 			m_Power = 1,
+			m_Log = -1,
 			m_ResetValue = 0,
 			m_DefaultReset = NODEFAULT,
 			m_Mult = 1;
@@ -494,8 +508,27 @@ namespace Effects
 		const ParameterType m_Type;
 
 		void ConstrainValue() { m_Value = constrain(m_Value, 0, 1); }
-		double Convert(double v) const { return std::powf(v, m_Power) * (m_Range.end - m_Range.start) + m_Range.start; }
-		double Normalize(double v) const { return std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power); }
+		//double Convert(double v) const { return std::powf(v, m_Power) * (m_Range.end - m_Range.start) + m_Range.start; }
+		//double Normalize(double v) const { auto a = std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power); return a; };
+		double Convert(double v) const 
+		{
+			if (m_Log == -1)
+				return std::powf(v, m_Power) * (m_Range.end - m_Range.start) + m_Range.start;
+			else
+				return ((std::powf(m_Log, v) - 1.0) / (m_Log - 1.0)) * (m_Range.end - m_Range.start) + m_Range.start;
+		}
+		
+		double Normalize(double v) const 
+		{
+			if (m_Log == -1)
+				return std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power); 
+			
+			float norm = ((v - m_Range.start) / (m_Range.end - m_Range.start)) * (m_Log - 1.0) + 1.0;
+			norm = norm > 0 ? norm : 0.0000000001;
+
+			return std::log(norm) / std::log(m_Log);
+		
+		};
 	};
 
 	/**
@@ -799,6 +832,22 @@ namespace Effects
 		Parameter& p2;
 	};
 
+	class FilterCurve : public Object
+	{
+	public:
+		FilterCurve(std::vector<BiquadParameters>& params)
+			: m_Parameters(params)
+		{}
+
+		std::vector<BiquadParameters>& Parameters()
+		{
+			return m_Parameters;
+		}
+
+	private:
+		std::vector<BiquadParameters>& m_Parameters;
+	};
+
 	/**
 	 * Complicated custom slider for the Dynamics Effect.
 	 */
@@ -1051,6 +1100,16 @@ namespace Effects
 		virtual Effects::XYController& XYController(Effects::Parameter& p1, Effects::Parameter& p2)
 		{
 			return dynamic_cast<Effects::XYController&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::XYController>(p1, p2)));
+		}
+
+		/**
+		 * Emplace a XYController.
+		 * @param p1 x-axis parameter
+		 * @param p2 y-axis parameter
+		 */
+		virtual Effects::FilterCurve& FilterCurve(std::vector<BiquadParameters>& p2)
+		{
+			return dynamic_cast<Effects::FilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::FilterCurve>(p2)));
 		}
 
 		/**

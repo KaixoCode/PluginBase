@@ -244,7 +244,7 @@ template<size_t N, class F, class P = F::Params>
 class ChannelEqualizer
 {
 public:
-	ChannelEqualizer(P(&a)[N])
+	ChannelEqualizer(std::vector<P>& a)
 		: m_Params(a), m_Filters()
 	{}
 
@@ -257,6 +257,6 @@ public:
 		return s;
 	}
 
-	P(&m_Params)[N];
+	std::vector<P>& m_Params;
 	F m_Filters[N];
 };
