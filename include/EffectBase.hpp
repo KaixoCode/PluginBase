@@ -848,6 +848,23 @@ namespace Effects
 		std::vector<BiquadParameters>& m_Parameters;
 	};
 
+	class SimpleFilterCurve : public Object
+	{
+	public:
+		SimpleFilterCurve(SimpleFilterParameters& params, Parameter& width, Parameter& freq)
+			: m_Parameters(params), width(width), freq(freq)
+		{}
+
+		std::vector<BiquadParameters>& Parameters()
+		{
+			return m_Parameters.Parameters();
+		}
+
+		Parameter& width, &freq;
+
+		SimpleFilterParameters& m_Parameters;
+	};
+
 	/**
 	 * Complicated custom slider for the Dynamics Effect.
 	 */
@@ -1103,13 +1120,21 @@ namespace Effects
 		}
 
 		/**
-		 * Emplace a XYController.
-		 * @param p1 x-axis parameter
-		 * @param p2 y-axis parameter
+		 * Emplace a FilterCurve.
+		 * @param p2 vector of filter parameters
 		 */
 		virtual Effects::FilterCurve& FilterCurve(std::vector<BiquadParameters>& p2)
 		{
 			return dynamic_cast<Effects::FilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::FilterCurve>(p2)));
+		}
+
+		/**
+		 * Emplace a SimpleFilterCurve.
+		 * @param p2 vector of filter parameters
+		 */
+		virtual Effects::SimpleFilterCurve& SimpleFilterCurve(SimpleFilterParameters& p2, Effects::Parameter& width, Effects::Parameter& freq)
+		{
+			return dynamic_cast<Effects::SimpleFilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::SimpleFilterCurve>(p2, width, freq)));
 		}
 
 		/**
