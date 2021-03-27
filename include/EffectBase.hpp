@@ -73,6 +73,11 @@ namespace Effects
 		 */
 		virtual auto Position() -> Pair<int> { return m_Position; }
 
+		/**
+		 * Reset this Object's values to the default.
+		 */
+		virtual void Default() {};
+
 		virtual operator nlohmann::json() { return nlohmann::json::object(); };
 		virtual void operator=(nlohmann::json json) {};
 
@@ -357,7 +362,7 @@ namespace Effects
 		 * Make the range of this parameter logarithmic.
 		 * @param v log
 		 */
-		virtual void Log(double v) { m_Log = v; }
+		virtual void Log(double v) { m_Log = v; m_Logg = std::log(m_Log); }
 
 		/**
 		 * Get the power to this parameter's value range.
@@ -461,6 +466,8 @@ namespace Effects
 		 */
 		virtual auto MidiLink() -> MidiCCLink& { return m_MidiLink; }
 
+		virtual void Default() override { m_ResetValue = m_DefaultReset; ResetValue(); }
+
 		operator nlohmann::json() override
 		{
 			nlohmann::json _json;
@@ -491,6 +498,7 @@ namespace Effects
 		double m_Value = 0,
 			m_Power = 1,
 			m_Log = -1,
+			m_Logg = 1,
 			m_ResetValue = 0,
 			m_DefaultReset = NODEFAULT,
 			m_Mult = 1;
@@ -515,7 +523,20 @@ namespace Effects
 			if (m_Log == -1)
 				return std::powf(v, m_Power) * (m_Range.end - m_Range.start) + m_Range.start;
 			else
-				return ((std::powf(m_Log, v) - 1.0) / (m_Log - 1.0)) * (m_Range.end - m_Range.start) + m_Range.start;
+			{
+				static const auto mylog = [](double v, double b) { return std::log(v) / b; };
+				auto rs = m_Range.start;
+				auto re = m_Range.end;
+				if (rs == 0)
+					rs = 0.00000000001;
+				if (re == 0)
+					re = 0.00000000001;
+				auto abs = v >= 0 ? v : -v;
+
+				auto val = std::pow(m_Log, abs * (mylog(re, m_Logg) - mylog(rs, m_Logg)) + mylog(rs, m_Logg));
+				return v >= 0 ? val : -val;
+			}
+			//return ((std::powf(m_Log, v) - 1.0) / (m_Log - 1.0)) * (m_Range.end - m_Range.start) + m_Range.start;
 		}
 		
 		double Normalize(double v) const 
@@ -523,10 +544,28 @@ namespace Effects
 			if (m_Log == -1)
 				return std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power); 
 			
-			float norm = ((v - m_Range.start) / (m_Range.end - m_Range.start)) * (m_Log - 1.0) + 1.0;
-			norm = norm > 0 ? norm : 0.0000000001;
+			static const auto mylog = [](double v, double b) { return std::log(v) / b; };
 
-			return std::log(norm) / std::log(m_Log);
+			auto rs = m_Range.start;
+			auto re = m_Range.end;
+			if (rs == 0)
+				rs = 0.00000000001;
+			if (re == 0)
+				re = 0.00000000001;
+
+			if (v == 0)
+				v = 0.00000000001;
+
+			auto log = v >= 0 ? mylog(v, m_Logg) : mylog(-v, m_Logg);
+
+			auto norm1 = (log - mylog(rs, m_Logg)) / (mylog(re, m_Logg) - mylog(rs, m_Logg));
+			return v >= 0 ? norm1 : -norm1;
+
+
+			//float norm = ((v - m_Range.start) / (m_Range.end - m_Range.start)) * (m_Log - 1.0) + 1.0;
+			//norm = norm > 0 ? norm : 0.0000000001;
+
+			//return std::log(norm) / std::log(m_Log);
 		
 		};
 	};
@@ -642,7 +681,10 @@ namespace Effects
 		 */
 		void Select(int i)
 		{
-			m_Selected = (int)i;
+			if (m_Default == -1)
+				m_Default = i;
+
+			m_Selected = i;
 		}
 
 		/**
@@ -669,8 +711,11 @@ namespace Effects
 			Select(json.at("selected").get<int>());
 		}
 
+		virtual void Default() override { Select(m_Default); }
+
 	private:
 		int m_Selected = -1;
+		int m_Default = -1;
 		std::vector<Option> m_Options;
 	};
 
@@ -693,7 +738,7 @@ namespace Effects
 		 * Set the state of this button.
 		 * @param s state
 		 */
-		void State(bool s) { state = s; }
+		void State(bool s) { if (m_Default == -1) m_Default = s; state = s; }
 
 		/**
 		 * Get the state of this button.
@@ -724,7 +769,10 @@ namespace Effects
 			State(json.at("state").get<bool>());
 		}
 
+		virtual void Default() override { State(m_Default); }
+
 	private:
+		int m_Default = -1;
 		std::string m_Name;
 	};
 
@@ -926,6 +974,21 @@ namespace Effects
 			pregain = json.at("pregain").get<double>();
 			postgain = json.at("postgain").get<double>();
 			mix = json.at("mix").get<double>();
+		}
+
+		virtual void Default() override
+		{
+			expanderThreshhold = -50;
+			compressThreshhold = -10;
+			expanderRatio = 0;
+			compressRatio = 0;
+
+			attms = 1;
+			relms = 100;
+
+			pregain = 0;
+			postgain = 0;
+			mix = 0;
 		}
 
 	private:
