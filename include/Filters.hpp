@@ -276,12 +276,12 @@ struct SimpleFilterParameters
 	{
 		m_Params[0].type = FilterType::HighPass;
 		double from = FromFreq(freq);
-		double a = from - std::pow(width, 4) + 0.03;
+		double a = from - std::pow(width, 2) + 0.001;
 		m_Params[0].f0 = a < 0 ? -ToFreq(-a) : ToFreq(a);
 		m_Params[0].Q = 0.6;
 		m_Params[0].RecalculateParameters();
 		m_Params[1].type = FilterType::LowPass;
-		a = from + std::pow(width, 4) - 0.03;
+		a = from + std::pow(width, 2) - 0.001;
 		m_Params[1].f0 = a < 0 ? -ToFreq(-a) : ToFreq(a);
 		m_Params[1].Q = 0.6;
 		m_Params[1].RecalculateParameters();

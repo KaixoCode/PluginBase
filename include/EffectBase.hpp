@@ -643,6 +643,10 @@ namespace Effects
 	{
 	public:
 
+		DropDown(const std::string& name)
+			: m_Name(name)
+		{}
+
 		/**
 		 * An single option for the group of radio buttons.
 		 */
@@ -699,6 +703,12 @@ namespace Effects
 		 */
 		auto Options() -> std::vector<Option>& { return m_Options; }
 
+		/**
+		 * Returns the name of this dropdown.
+		 * @return name
+		 */
+		auto Name() -> std::string& { return m_Name; }
+
 		operator nlohmann::json() override
 		{
 			nlohmann::json _json;
@@ -714,6 +724,7 @@ namespace Effects
 		virtual void Default() override { Select(m_Default); }
 
 	private:
+		std::string m_Name;
 		int m_Selected = -1;
 		int m_Default = -1;
 		std::vector<Option> m_Options;
@@ -1131,9 +1142,9 @@ namespace Effects
 		/**
 		 * Emplace a DropDown.
 		 */
-		virtual Effects::DropDown& DropDown()
+		virtual Effects::DropDown& DropDown(const std::string& name = "")
 		{
-			return dynamic_cast<Effects::DropDown&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::DropDown>()));
+			return dynamic_cast<Effects::DropDown&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::DropDown>(name)));
 		}
 
 		/**
