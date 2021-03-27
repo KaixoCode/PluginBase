@@ -466,7 +466,7 @@ namespace Effects
 		 */
 		virtual auto MidiLink() -> MidiCCLink& { return m_MidiLink; }
 
-		virtual void Default() override { m_ResetValue = m_DefaultReset; ResetValue(); }
+		virtual void Default() override { m_ResetValue = m_DefaultReset; ResetValue(); m_MidiLink = { -1, -1, -1 }; }
 
 		operator nlohmann::json() override
 		{
