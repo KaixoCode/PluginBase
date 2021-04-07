@@ -589,9 +589,15 @@ namespace Effects
 		 */
 		void Channels(int n)
 		{
+			if (n == m_Channels)
+				return;
+
 			m_Channels = n;
+			m_Values.reserve(n);
 			while (m_Values.size() < n)
 				m_Values.push_back(0);
+
+			m_Reduces.reserve(n);
 			while (m_Reduces.size() < n)
 				m_Reduces.push_back(0);
 		}
@@ -600,7 +606,7 @@ namespace Effects
 		 * Get the amount of channels for this VolumeSlider.
 		 * @return amount of channels
 		 */
-		int  Channels() { return m_Channels; }
+		int Channels() { return m_Channels; }
 
 		/**
 		 * Get the list of levels of all channels in this VolumeSlider.
