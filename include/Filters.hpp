@@ -264,7 +264,7 @@ public:
 // Simple low/high pass band filter
 struct SimpleFilterParameters
 {
-	double freq, width;
+	double freq = 440, width = 1;
 
 	SimpleFilterParameters()
 	{

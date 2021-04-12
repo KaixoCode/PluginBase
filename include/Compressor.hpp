@@ -4,7 +4,7 @@
 
 
 #define db2lin(db) std::powf(10.0f, 0.05 * (db))
-#define lin2db(lin) (20.0f * std::log10f(lin))
+#define lin2db(lin) (20.0f * std::log10f(static_cast<float>(lin)))
 #define myabs(f) if (f < 0) f = -f;
 
 
@@ -80,7 +80,7 @@ public:
 		}
 		else
 		{
-			double s = biggest;
+			float s = biggest;
 			biggest = 0;
 			s *= pregain;
 			float _absSample = s;
@@ -88,10 +88,10 @@ public:
 
 			// convert key to dB
 			_absSample += DC_OFFSET;	// add DC offset to avoid log( 0 )
-			double _absSampledB = lin2db(_absSample); // convert linear -> dB
+			float _absSampledB = lin2db(_absSample); // convert linear -> dB
 
 			// threshold
-			double _overdB = _absSampledB - expanderThreshhold;
+			float _overdB = _absSampledB - expanderThreshhold;
 			if (_overdB > 0.0)
 				_overdB = 0.0;
 
@@ -105,7 +105,7 @@ public:
 			_overdB = expanderEnv - DC_OFFSET; // subtract DC offset
 
 				// transfer function
-			double _gr = _overdB * (expanderRatio - 1.0) * mix;
+			float _gr = _overdB * (expanderRatio - 1.0) * mix;
 			expanderMult = db2lin(_gr); // convert dB -> linear
 
 			// output gain expander

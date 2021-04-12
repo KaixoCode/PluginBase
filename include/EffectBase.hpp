@@ -242,7 +242,7 @@ namespace Effects
 
 	private:
 		std::vector<std::unique_ptr<Div>> m_Divs;
-		Effects::Object* m_Object;
+		Effects::Object* m_Object{ nullptr };
 		Type m_Type = Type::Divs;
 		Alignment m_Align = Alignment::Center;
 		int m_CellSize = AUTO;
@@ -637,7 +637,7 @@ namespace Effects
 		void SetReduce(int i, float v) { m_Reduces[i] = v; }
 
 	private:
-		int m_Channels;
+		int m_Channels = 0;
 		std::vector<float> m_Values;
 		std::vector<float> m_Reduces;
 	};
