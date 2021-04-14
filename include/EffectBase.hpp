@@ -79,7 +79,7 @@ namespace Effects
 		virtual void Default() {};
 
 		virtual operator nlohmann::json() { return nlohmann::json::object(); };
-		virtual void operator=(nlohmann::json json) {};
+		virtual void operator=(const nlohmann::json& json) {};
 
 	private:
 		Pair<int> m_Size{ 30, 30 }, m_Position{ 0, 0 };
@@ -468,7 +468,7 @@ namespace Effects
 
 		virtual void Default() override { m_ResetValue = m_DefaultReset; ResetValue(); m_MidiLink = { -1, -1, -1 }; }
 
-		operator nlohmann::json() override
+		virtual operator nlohmann::json() override
 		{
 			nlohmann::json _json;
 			_json["value"] = m_Value;
@@ -480,7 +480,7 @@ namespace Effects
 			return _json;
 		}
 
-		void operator=(nlohmann::json json) override
+		virtual void operator=(const nlohmann::json& json) override
 		{
 			m_Value = json.at("value").get<double>();
 			m_ResetValue = json.at("default").get<double>();
@@ -722,7 +722,7 @@ namespace Effects
 			return _json;
 		}
 
-		void operator=(nlohmann::json json) override
+		void operator=(const nlohmann::json& json) override
 		{
 			Select(json.at("selected").get<int>());
 		}
@@ -781,7 +781,7 @@ namespace Effects
 			return _json;
 		}
 
-		void operator=(nlohmann::json json) override
+		void operator=(const nlohmann::json& json) override
 		{
 			State(json.at("state").get<bool>());
 		}
@@ -853,7 +853,7 @@ namespace Effects
 			return _json;
 		}
 
-		void operator=(nlohmann::json json) override
+		void operator=(const nlohmann::json& json) override
 		{
 			bool s = json.at("selected").get<bool>();
 			Selected(s);
@@ -980,7 +980,7 @@ namespace Effects
 			return _json;
 		}
 
-		void operator=(nlohmann::json json) override
+		void operator=(const nlohmann::json& json) override
 		{
 			expanderThreshhold = json.at("expanderThreshhold").get<double>();
 			compressThreshhold = json.at("compressThreshhold").get<double>();
