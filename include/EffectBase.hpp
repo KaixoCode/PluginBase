@@ -578,6 +578,7 @@ namespace Effects
 	public:
 
 		VolumeSlider()
+			: Parameter("Volume", ParameterType::VolumeSlider)
 		{
 			Name("Volume");
 			DisplayName(false);
