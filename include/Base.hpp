@@ -11,7 +11,7 @@
 
 #define constrain(x, y, z) (x < y ? y : x > z ? z : x)
 
-namespace Effects
+namespace SoundMixr
 {
 	/**
 	 * Simple pair used for size/position/range.
@@ -149,7 +149,7 @@ namespace Effects
 		 * Set the object if this Div is of type Object.
 		 * @param o object
 		 */
-		void Object(Effects::Object* o)
+		void Object(SoundMixr::Object* o)
 		{
 			if (m_Align == Alignment::Vertical || m_Align == Alignment::Horizontal) 
 				m_Align = Alignment::Center;
@@ -160,7 +160,7 @@ namespace Effects
 		 * Set the object if this Div is of type Object.
 		 * @param o object
 		 */
-		void Object(Effects::Object& o) 
+		void Object(SoundMixr::Object& o) 
 		{
 			if (m_Align == Alignment::Vertical || m_Align == Alignment::Horizontal)
 				m_Align = Alignment::Center;
@@ -232,17 +232,17 @@ namespace Effects
 		 * Set the object if this Div is of type Object.
 		 * @param o object
 		 */
-		void operator=(Effects::Object& o) { Object(o); }
+		void operator=(SoundMixr::Object& o) { Object(o); }
 
 		/**
 		 * Set the object if this Div is of type Object.
 		 * @param o object
 		 */
-		void operator=(Effects::Object* o) { Object(o); }
+		void operator=(SoundMixr::Object* o) { Object(o); }
 
 	private:
 		std::vector<std::unique_ptr<Div>> m_Divs;
-		Effects::Object* m_Object{ nullptr };
+		SoundMixr::Object* m_Object{ nullptr };
 		Type m_Type = Type::Divs;
 		Alignment m_Align = Alignment::Center;
 		int m_CellSize = AUTO;
@@ -1134,49 +1134,49 @@ namespace Effects
 		 * Get the layout Div of this Effect.
 		 * @return div
 		 */
-		virtual auto Div() -> Effects::Div& { return m_Div; }
+		virtual auto Div() -> SoundMixr::Div& { return m_Div; }
 
 		/**
 		 * Emplace a Parameter.
 		 * @param name name
 		 * @param type type
 		 */
-		virtual Effects::Parameter& Parameter(const std::string& name, ParameterType type)
+		virtual SoundMixr::Parameter& Parameter(const std::string& name, ParameterType type)
 		{
-			return dynamic_cast<Effects::Parameter&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::Parameter>(name, type)));
+			return dynamic_cast<SoundMixr::Parameter&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::Parameter>(name, type)));
 		}
 
 		/**
 		 * Emplace a DropDown.
 		 */
-		virtual Effects::DropDown& DropDown(const std::string& name = "")
+		virtual SoundMixr::DropDown& DropDown(const std::string& name = "")
 		{
-			return dynamic_cast<Effects::DropDown&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::DropDown>(name)));
+			return dynamic_cast<SoundMixr::DropDown&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::DropDown>(name)));
 		}
 
 		/**
 		 * Emplace a Toggle Button.
 		 * @param name name
 		 */
-		virtual Effects::ToggleButton& Toggle(const std::string& name)
+		virtual SoundMixr::ToggleButton& Toggle(const std::string& name)
 		{
-			return dynamic_cast<Effects::ToggleButton&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::ToggleButton>(name)));
+			return dynamic_cast<SoundMixr::ToggleButton&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::ToggleButton>(name)));
 		}
 
 		/**
 		 * Emplace a VolumeSlider.
 		 */
-		virtual Effects::VolumeSlider& VolumeSlider()
+		virtual SoundMixr::VolumeSlider& VolumeSlider()
 		{
-			return dynamic_cast<Effects::VolumeSlider&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::VolumeSlider>()));
+			return dynamic_cast<SoundMixr::VolumeSlider&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::VolumeSlider>()));
 		}
 
 		/**
 		 * Emplace a DynamicsSlider.
 		 */
-		virtual Effects::DynamicsSlider& DynamicsSlider()
+		virtual SoundMixr::DynamicsSlider& DynamicsSlider()
 		{
-			return dynamic_cast<Effects::DynamicsSlider&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::DynamicsSlider>()));
+			return dynamic_cast<SoundMixr::DynamicsSlider&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::DynamicsSlider>()));
 		}
 
 		/**
@@ -1185,9 +1185,9 @@ namespace Effects
 		 * @param id group id
 		 * @param callback callback
 		 */
-		virtual Effects::RadioButton& RadioButton(const std::string& name, int id, std::function<void()> callback = [] {})
+		virtual SoundMixr::RadioButton& RadioButton(const std::string& name, int id, std::function<void()> callback = [] {})
 		{
-			return dynamic_cast<Effects::RadioButton&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::RadioButton>(name, id, callback)));
+			return dynamic_cast<SoundMixr::RadioButton&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::RadioButton>(name, id, callback)));
 		}
 
 		/**
@@ -1195,41 +1195,41 @@ namespace Effects
 		 * @param p1 x-axis parameter
 		 * @param p2 y-axis parameter
 		 */
-		virtual Effects::XYController& XYController(Effects::Parameter& p1, Effects::Parameter& p2)
+		virtual SoundMixr::XYController& XYController(SoundMixr::Parameter& p1, SoundMixr::Parameter& p2)
 		{
-			return dynamic_cast<Effects::XYController&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::XYController>(p1, p2)));
+			return dynamic_cast<SoundMixr::XYController&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::XYController>(p1, p2)));
 		}
 
 		/**
 		 * Emplace a FilterCurve.
 		 * @param p2 vector of filter parameters
 		 */
-		virtual Effects::FilterCurve& FilterCurve(std::vector<BiquadParameters>& p2)
+		virtual SoundMixr::FilterCurve& FilterCurve(std::vector<BiquadParameters>& p2)
 		{
-			return dynamic_cast<Effects::FilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::FilterCurve>(p2)));
+			return dynamic_cast<SoundMixr::FilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::FilterCurve>(p2)));
 		}
 
 		/**
 		 * Emplace a SimpleFilterCurve.
 		 * @param p2 vector of filter parameters
 		 */
-		virtual Effects::SimpleFilterCurve& SimpleFilterCurve(SimpleFilterParameters& p2, Effects::Parameter& width, Effects::Parameter& freq)
+		virtual SoundMixr::SimpleFilterCurve& SimpleFilterCurve(SimpleFilterParameters& p2, SoundMixr::Parameter& width, SoundMixr::Parameter& freq)
 		{
-			return dynamic_cast<Effects::SimpleFilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<Effects::SimpleFilterCurve>(p2, width, freq)));
+			return dynamic_cast<SoundMixr::SimpleFilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::SimpleFilterCurve>(p2, width, freq)));
 		}
 
 		/**
 		 * Get all objects in this Effect.
 		 * @return objects
 		 */
-		virtual std::vector<std::unique_ptr<Effects::Object>>& Objects()
+		virtual std::vector<std::unique_ptr<SoundMixr::Object>>& Objects()
 		{
 			return m_EffectObjects;
 		}
 
 	protected:
-		Effects::Div m_Div;
-		std::vector<std::unique_ptr<Effects::Object>> m_EffectObjects;
+		SoundMixr::Div m_Div;
+		std::vector<std::unique_ptr<SoundMixr::Object>> m_EffectObjects;
 		const std::string m_Name = "";
 		double m_SampleRate = 48000;
 		int m_Height = 145;
