@@ -1029,7 +1029,7 @@ namespace SoundMixr
 	/**
 	 * Base for any Effect.
 	 */
-	class EffectBase
+	class PluginBase
 	{
 	public:
 
@@ -1037,11 +1037,11 @@ namespace SoundMixr
 		 * Constructor
 		 * @param name name
 		 */
-		EffectBase(const std::string& name) :
+		PluginBase(const std::string& name) :
 			m_Name(name)
 		{};
 
-		virtual ~EffectBase() {}
+		virtual ~PluginBase() {}
 
 		virtual void Destroy() { delete this; };
 
@@ -1049,14 +1049,6 @@ namespace SoundMixr
 		 * This is called each frame.
 		 */
 		virtual void Update() {};
-
-		/**
-		 * Generate the next sample.
-		 * @param in sample
-		 * @param c channel
-		 * @return next sample
-		 */
-		virtual float NextSample(float in, int c) = 0;
 
 		/**
 		 * This is called whenever the amount of channels changes. 
@@ -1069,11 +1061,11 @@ namespace SoundMixr
 		/**
 		 * This operator is used to save the settings of this Effect.
 		 */
-		virtual operator nlohmann::json() 
+		virtual operator nlohmann::json()
 		{ 
 			nlohmann::json _json;
 			_json["params"] = nlohmann::json::array();
-			for (auto& i : m_EffectObjects)
+			for (auto& i : m_PluginObjects)
 				_json["params"] += *i;
 			return _json;
 		};
@@ -1086,9 +1078,9 @@ namespace SoundMixr
 			int index = 0;
 			for (auto& i : json.at("params"))
 			{
-				m_EffectObjects[index]->operator=(i);
+				m_PluginObjects[index]->operator=(i);
 				index++;		
-				if (index >= m_EffectObjects.size())
+				if (index >= m_PluginObjects.size())
 					break;
 			}
 			Update();
@@ -1116,19 +1108,25 @@ namespace SoundMixr
 		 * Set the height of this Effect.
 		 * @param h height
 		 */
-		virtual void Height(int h) { m_Height = h; }
+		virtual void Height(int h) { m_Size.height = h; }
 
 		/**
 		 * Get the height of this Effect.
 		 * @return height
 		 */
-		virtual int Height() { return m_Height; }
+		virtual int Height() { return m_Size.height; }
+
+		/**
+		 * Set the width of this Effect.
+		 * @param w width
+		 */
+		virtual void Width(int w) { m_Size.width = w; }
 
 		/**
 		 * Get the width of this Effect.
 		 * @return width
 		 */
-		virtual int Width() { return 300; }
+		virtual int Width() { return m_Size.width; }
 
 		/**
 		 * Get the layout Div of this Effect.
@@ -1143,7 +1141,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::Parameter& Parameter(const std::string& name, ParameterType type)
 		{
-			return dynamic_cast<SoundMixr::Parameter&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::Parameter>(name, type)));
+			return dynamic_cast<SoundMixr::Parameter&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::Parameter>(name, type)));
 		}
 
 		/**
@@ -1151,7 +1149,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::DropDown& DropDown(const std::string& name = "")
 		{
-			return dynamic_cast<SoundMixr::DropDown&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::DropDown>(name)));
+			return dynamic_cast<SoundMixr::DropDown&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::DropDown>(name)));
 		}
 
 		/**
@@ -1160,7 +1158,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::ToggleButton& Toggle(const std::string& name)
 		{
-			return dynamic_cast<SoundMixr::ToggleButton&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::ToggleButton>(name)));
+			return dynamic_cast<SoundMixr::ToggleButton&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::ToggleButton>(name)));
 		}
 
 		/**
@@ -1168,7 +1166,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::VolumeSlider& VolumeSlider()
 		{
-			return dynamic_cast<SoundMixr::VolumeSlider&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::VolumeSlider>()));
+			return dynamic_cast<SoundMixr::VolumeSlider&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::VolumeSlider>()));
 		}
 
 		/**
@@ -1176,7 +1174,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::DynamicsSlider& DynamicsSlider()
 		{
-			return dynamic_cast<SoundMixr::DynamicsSlider&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::DynamicsSlider>()));
+			return dynamic_cast<SoundMixr::DynamicsSlider&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::DynamicsSlider>()));
 		}
 
 		/**
@@ -1187,7 +1185,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::RadioButton& RadioButton(const std::string& name, int id, std::function<void()> callback = [] {})
 		{
-			return dynamic_cast<SoundMixr::RadioButton&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::RadioButton>(name, id, callback)));
+			return dynamic_cast<SoundMixr::RadioButton&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::RadioButton>(name, id, callback)));
 		}
 
 		/**
@@ -1197,7 +1195,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::XYController& XYController(SoundMixr::Parameter& p1, SoundMixr::Parameter& p2)
 		{
-			return dynamic_cast<SoundMixr::XYController&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::XYController>(p1, p2)));
+			return dynamic_cast<SoundMixr::XYController&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::XYController>(p1, p2)));
 		}
 
 		/**
@@ -1206,7 +1204,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::FilterCurve& FilterCurve(std::vector<BiquadParameters>& p2)
 		{
-			return dynamic_cast<SoundMixr::FilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::FilterCurve>(p2)));
+			return dynamic_cast<SoundMixr::FilterCurve&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::FilterCurve>(p2)));
 		}
 
 		/**
@@ -1215,7 +1213,7 @@ namespace SoundMixr
 		 */
 		virtual SoundMixr::SimpleFilterCurve& SimpleFilterCurve(SimpleFilterParameters& p2, SoundMixr::Parameter& width, SoundMixr::Parameter& freq)
 		{
-			return dynamic_cast<SoundMixr::SimpleFilterCurve&>(*m_EffectObjects.emplace_back(std::make_unique<SoundMixr::SimpleFilterCurve>(p2, width, freq)));
+			return dynamic_cast<SoundMixr::SimpleFilterCurve&>(*m_PluginObjects.emplace_back(std::make_unique<SoundMixr::SimpleFilterCurve>(p2, width, freq)));
 		}
 
 		/**
@@ -1224,19 +1222,67 @@ namespace SoundMixr
 		 */
 		virtual std::vector<std::unique_ptr<SoundMixr::Object>>& Objects()
 		{
-			return m_EffectObjects;
+			return m_PluginObjects;
 		}
 
 	protected:
 		SoundMixr::Div m_Div;
-		std::vector<std::unique_ptr<SoundMixr::Object>> m_EffectObjects;
+		std::vector<std::unique_ptr<SoundMixr::Object>> m_PluginObjects;
 		const std::string m_Name = "";
 		double m_SampleRate = 48000;
-		int m_Height = 145;
+		Pair<int> m_Size{ 300, 145 };
+	};
+
+
+	class EffectBase : public PluginBase
+	{
+	public:
+		using PluginBase::PluginBase;
+
+		using PluginBase::operator nlohmann::json;
+		using PluginBase::operator=;
+
+		/**
+		 * Generate the next sample.
+		 * @param in sample
+		 * @param c channel
+		 * @return next sample
+		 */
+		virtual float Process(float in, int c) = 0;
+	};
+
+	class GeneratorBase : public PluginBase
+	{
+	public:
+		using PluginBase::PluginBase;
+
+		using PluginBase::operator nlohmann::json;
+		using PluginBase::operator=;
+		
+		/**
+		 * Generate the next sample.
+		 * @param c channel
+		 * @return next sample
+		 */
+		virtual float Generate(int c) = 0;
+
+		// TODO: implement a proper way of receiving all sorts of midi data.
+		virtual void ReceiveMidi() {};
 	};
 }
 
 extern "C" DLLDIR int __cdecl Version()
 {
 	return 13;
+}
+
+extern "C" DLLDIR int __cdecl Type()
+{
+#if defined(EFFECT_PLUGIN)
+	return 1;
+#elif defined(GENERATOR_PLUGIN)
+	return 2;
+#else
+	return 0;
+#endif
 }

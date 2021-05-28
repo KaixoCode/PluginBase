@@ -58,7 +58,7 @@ public:
 		}
 	}
 
-	float NextSample(float sin, int c)
+	float Process(float sin, int c)
 	{
 		if (sin == 0 && zerocounter <= 100)
 			zerocounter++;

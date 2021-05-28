@@ -14,7 +14,7 @@ namespace Wavetables
 class Oscillator
 {
 public:
-	float NextSample(double phaseoffset = 0)
+	float Process(double phaseoffset = 0)
 	{
         double delta = frequency / sampleRate;
         phase = std::fmod(1 + phase + phaseoffset + delta, 1);
@@ -107,12 +107,12 @@ public:
             i.wavetable = wavetable;
     }
 
-    float NextSample()
+    float Process()
     {
         float out = 0;
         for (int i = 0; i < m_Voices; i++)
             if (m_Notes[i] != -1)
-                out += m_GeneratorVoices[i].NextSample();
+                out += m_GeneratorVoices[i].Process();
 
         return out;
     }
