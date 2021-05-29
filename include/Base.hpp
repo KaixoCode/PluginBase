@@ -127,7 +127,7 @@ namespace SoundMixr
 		 * Get the type of this Div, either Divs or Object.
 		 */
 		auto DivType() -> Type { return m_Type; }
-		
+
 		/**
 		 * Depending on the Div type: Set the alignment of the Divs contained in this Div or the alignment of the Object in this Div.
 		 * @param a alignment
@@ -151,7 +151,7 @@ namespace SoundMixr
 		 */
 		void Object(SoundMixr::Object* o)
 		{
-			if (m_Align == Alignment::Vertical || m_Align == Alignment::Horizontal) 
+			if (m_Align == Alignment::Vertical || m_Align == Alignment::Horizontal)
 				m_Align = Alignment::Center;
 			m_Type = Type::Object; m_Object = o;
 		}
@@ -160,11 +160,11 @@ namespace SoundMixr
 		 * Set the object if this Div is of type Object.
 		 * @param o object
 		 */
-		void Object(SoundMixr::Object& o) 
+		void Object(SoundMixr::Object& o)
 		{
 			if (m_Align == Alignment::Vertical || m_Align == Alignment::Horizontal)
 				m_Align = Alignment::Center;
-			m_Type = Type::Object; m_Object = &o; 
+			m_Type = Type::Object; m_Object = &o;
 		}
 
 		/**
@@ -332,7 +332,7 @@ namespace SoundMixr
 		virtual double DefaultReset() { return m_DefaultReset; }
 
 		/**
-		 * Set a Multiplier for the speed at which the parameter value 
+		 * Set a Multiplier for the speed at which the parameter value
 		 * changes per pixel dragged with the mouse.
 		 * @param v multiplier
 		 */
@@ -346,7 +346,7 @@ namespace SoundMixr
 		virtual double Multiplier() { return m_Mult; }
 
 		/**
-		 * Set a power to this parameter's value range, useful when a range 
+		 * Set a power to this parameter's value range, useful when a range
 		 * is non-linear.
 		 * @param v power
 		 */
@@ -518,7 +518,7 @@ namespace SoundMixr
 		void ConstrainValue() { m_Value = constrain(m_Value, 0, 1); }
 		//double Convert(double v) const { return std::powf(v, m_Power) * (m_Range.end - m_Range.start) + m_Range.start; }
 		//double Normalize(double v) const { auto a = std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power); return a; };
-		double Convert(double v) const 
+		double Convert(double v) const
 		{
 			if (m_Log == -1)
 				return std::powf(v, m_Power) * (m_Range.end - m_Range.start) + m_Range.start;
@@ -538,12 +538,12 @@ namespace SoundMixr
 			}
 			//return ((std::powf(m_Log, v) - 1.0) / (m_Log - 1.0)) * (m_Range.end - m_Range.start) + m_Range.start;
 		}
-		
-		double Normalize(double v) const 
+
+		double Normalize(double v) const
 		{
 			if (m_Log == -1)
-				return std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power); 
-			
+				return std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power);
+
 			static const auto mylog = [](double v, double b) { return std::log(v) / b; };
 
 			auto rs = m_Range.start;
@@ -566,7 +566,7 @@ namespace SoundMixr
 			//norm = norm > 0 ? norm : 0.0000000001;
 
 			//return std::log(norm) / std::log(m_Log);
-		
+
 		};
 	};
 
@@ -812,7 +812,7 @@ namespace SoundMixr
 		{}
 
 		/**
-		 * Select this button in the group of buttons with the same id. 
+		 * Select this button in the group of buttons with the same id.
 		 * Will call the callback!
 		 * @param s select
 		 */
@@ -926,7 +926,7 @@ namespace SoundMixr
 			return m_Parameters.Parameters();
 		}
 
-		Parameter& width, &freq;
+		Parameter& width, & freq;
 
 		SimpleFilterParameters& m_Parameters;
 	};
@@ -1051,8 +1051,8 @@ namespace SoundMixr
 		virtual void Update() {};
 
 		/**
-		 * This is called whenever the amount of channels changes. 
-		 * Use this to update any buffers you have to make sure you have enough space 
+		 * This is called whenever the amount of channels changes.
+		 * Use this to update any buffers you have to make sure you have enough space
 		 * for 'c' channels
 		 * @param c channels
 		 */
@@ -1062,7 +1062,7 @@ namespace SoundMixr
 		 * This operator is used to save the settings of this Effect.
 		 */
 		virtual operator nlohmann::json()
-		{ 
+		{
 			nlohmann::json _json;
 			_json["params"] = nlohmann::json::array();
 			for (auto& i : m_PluginObjects)
@@ -1073,13 +1073,13 @@ namespace SoundMixr
 		/**
 		 * This operator is used to load the settings of this Effect.
 		 */
-		virtual void operator=(const nlohmann::json& json) 
+		virtual void operator=(const nlohmann::json& json)
 		{
 			int index = 0;
 			for (auto& i : json.at("params"))
 			{
 				m_PluginObjects[index]->operator=(i);
-				index++;		
+				index++;
 				if (index >= m_PluginObjects.size())
 					break;
 			}
@@ -1258,7 +1258,7 @@ namespace SoundMixr
 
 		using PluginBase::operator nlohmann::json;
 		using PluginBase::operator=;
-		
+
 		/**
 		 * Generate the next sample.
 		 * @param c channel
@@ -1276,12 +1276,14 @@ extern "C" DLLDIR int __cdecl Version()
 	return 13;
 }
 
+#define EFFECT 1
+#define GENERATOR 2
 extern "C" DLLDIR int __cdecl Type()
 {
 #if defined(EFFECT_PLUGIN)
-	return 1;
+	return EFFECT;
 #elif defined(GENERATOR_PLUGIN)
-	return 2;
+	return GENERATOR;
 #else
 	return 0;
 #endif
