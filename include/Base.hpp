@@ -1233,7 +1233,6 @@ namespace SoundMixr
 		Pair<int> m_Size{ 300, 145 };
 	};
 
-
 	class EffectBase : public PluginBase
 	{
 	public:
@@ -1249,6 +1248,51 @@ namespace SoundMixr
 		 * @return next sample
 		 */
 		virtual float Process(float in, int c) = 0;
+	};
+
+	class MidiData
+	{
+	public:
+		enum class Type
+		{
+			NoteOn = 0b1001,
+			NoteOff = 0b1000,
+			PolyAfterTouch = 0b1010,
+			ControlChange = 0b1011,
+			ProgramChange = 0b1100,
+			ChannelAfterTouch = 0b1101,
+			PitchWheel = 0b1110
+		};
+
+		Type type;
+
+		MidiData(int t, uint32_t message)
+		{
+			type = (Type)(t);
+			data = message;
+		}
+		using byte = char;
+		struct NoteOff { byte note, velocity, channel, device; };
+		struct NoteOn { byte note, velocity, channel, device; };
+		struct PolyAfterTouch { byte note, pressure, channel, device; };
+		struct ControlChange { byte control, value, channel, device; };
+		struct ProgramChange { byte program, _, channel, device; };
+		struct ChannelAfterTouch { byte pressure, _, channel, device; };
+		struct PitchWheel { uint16_t value; byte channel, device; };
+
+		union
+		{
+			uint32_t data;
+			struct { byte data1, data2, channel, device; };
+
+			NoteOff noteoff;
+			NoteOn noteon;
+			PolyAfterTouch polyaftertouch;
+			ControlChange controlchange;
+			ProgramChange programchange;
+			ChannelAfterTouch channelaftertouch;
+			PitchWheel pitchwheel;
+		};
 	};
 
 	class GeneratorBase : public PluginBase
@@ -1267,7 +1311,7 @@ namespace SoundMixr
 		virtual float Generate(int c) = 0;
 
 		// TODO: implement a proper way of receiving all sorts of midi data.
-		virtual void ReceiveMidi() {};
+		virtual void ReceiveMidi(MidiData data) {};
 	};
 }
 
