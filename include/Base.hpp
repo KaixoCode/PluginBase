@@ -115,6 +115,22 @@ namespace SoundMixr
 			Divs, Object
 		};
 
+		struct Settings
+		{
+			int divs;
+			Alignment align = Alignment::Horizontal;
+			int padding = 0;
+			bool dividers = false;
+			int size = AUTO;
+		};
+
+		struct ObjectSettings
+		{
+			Object& component;
+			Alignment align = Alignment::Center;
+			int size = AUTO;
+		};
+
 		/**
 		 * Constructor.
 		 * @param t alignment
@@ -239,6 +255,18 @@ namespace SoundMixr
 		 * @param o object
 		 */
 		void operator=(SoundMixr::Object* o) { Object(o); }
+		
+		/**
+		 * Set the object if this Div is of type Object.
+		 * @param o object
+		 */
+		Div& operator=(const Settings& o) { Padding(o.padding); Divs(o.divs); Align(o.align); DivSize(o.size); Dividers(o.dividers); return *this; }
+
+		/**
+		 * Set the object if this Div is of type Object.
+		 * @param o object
+		 */
+		Div& operator=(const ObjectSettings& o) { Object(o.component); DivSize(o.size); Align(o.align); return *this; }
 
 	private:
 		std::vector<std::unique_ptr<Div>> m_Divs;
