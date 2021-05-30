@@ -59,7 +59,7 @@ namespace SoundMixr
 		 * Get the size.
 		 * @return size
 		 */
-		virtual auto Size() -> Pair<int> { return m_Size; }
+		virtual auto Size() -> Pair<int>& { return m_Size; }
 
 		/**
 		 * Set the position.
@@ -71,7 +71,7 @@ namespace SoundMixr
 		 * Get the position.
 		 * @return position
 		 */
-		virtual auto Position() -> Pair<int> { return m_Position; }
+		virtual auto Position() -> Pair<int>& { return m_Position; }
 
 		/**
 		 * Reset this Object's values to the default.
@@ -129,6 +129,7 @@ namespace SoundMixr
 			Object& component;
 			Alignment align = Alignment::Center;
 			int size = AUTO;
+			bool resize = false;
 		};
 
 		/**
@@ -221,6 +222,18 @@ namespace SoundMixr
 		int  DivSize() { return m_CellSize; }
 
 		/**
+		 * Enable the autoresizing of the component to the div size.
+		 * @param r resize
+		 */
+		void ResizeComponent(bool r) { m_ResizeComponent = r; }
+
+		/**
+		 * Returns true when auto resizing is enabled.
+		 * @return if auto resize
+		 */
+		bool ResizeComponent() { return m_ResizeComponent; }
+
+		/**
 		 * Returns all the Divs inside this Div.
 		 * @return all the Divs in this Div
 		 */
@@ -266,7 +279,7 @@ namespace SoundMixr
 		 * Set the object if this Div is of type Object.
 		 * @param o object
 		 */
-		Div& operator=(const ObjectSettings& o) { Object(o.component); DivSize(o.size); Align(o.align); return *this; }
+		Div& operator=(const ObjectSettings& o) { Object(o.component); DivSize(o.size); Align(o.align); ResizeComponent(o.resize); return *this; }
 
 	private:
 		std::vector<std::unique_ptr<Div>> m_Divs;
@@ -277,6 +290,7 @@ namespace SoundMixr
 		int m_Cells = 0;
 		int m_Padding = 0;
 		bool m_Dividers = false;
+		bool m_ResizeComponent = false;
 	};
 
 	/**

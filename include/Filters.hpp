@@ -55,7 +55,7 @@ public:
 
 	void RecalculateParameters()
 	{
-		w0 = 6.28318530718 * (constrain(f0, 10, 22000) / sampleRate);
+		w0 = 6.28318530718 * (constrain(f0, 10, sampleRate / 2.1) / sampleRate);
 		cosw0 = std::cos(w0), sinw0 = std::sin(w0);
 
 		switch (type) {
