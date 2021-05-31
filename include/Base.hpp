@@ -293,6 +293,25 @@ namespace SoundMixr
 		bool m_ResizeComponent = false;
 	};
 
+	struct ParameterData
+	{
+		enum class Scaling
+		{
+			Log, Pow
+		};
+
+		Pair<double> range{ 0, 100 };       // The range of this Parameter.
+		double multiplier = 1;              // Multiplier for the speed at which the parameter value changes per pixel dragged with the mouse.
+		Scaling scalingType = Scaling::Pow; // Set the scaling type for the value of this Parameter.
+		double scaling = 1;                 // Scaling amount for the value of this Parameter.
+		bool enableSmoothing = false;       // Enable the value smoothing.
+		double smoothingAmount = 1;         // Lerping amount per sample.
+		bool vertical = true;               // Is this parameter displayed/dragged vertically?
+		int decimals = 1;                   // The amount of decimals that should be displayed for this Parameter.
+		bool displayValue = true;           // Enable/Disable the displaying of the value.
+		bool displayName = true;            // Enable/Disable the displaying of the name.
+	};
+
 	/**
 	 * Parameter base class, anything that has a range and a value, slider/knob etc.
 	 */
@@ -310,6 +329,18 @@ namespace SoundMixr
 		{}
 
 		/**
+		 * Set the parameter settings.
+		 * @param s parameter settings
+		 */
+		virtual void Data(const ParameterData& d) { m_Data = d; }
+		
+		/**
+		 * Get the parameter settings.
+		 * @return parameter settings
+		 */
+		virtual ParameterData& Data() { return m_Data; }
+
+		/**
 		 * Set the name of this Parameter.
 		 * @param n name
 		 */
@@ -320,18 +351,18 @@ namespace SoundMixr
 		 * @return name
 		 */
 		virtual auto Name() -> std::string& { return m_Name; }
-
+		
 		/**
 		 * Set the range of this Parameter.
 		 * @param r range
 		 */
-		virtual void Range(const Pair<double>& r) { m_Range = r; ConstrainValue(); }
+		virtual void Range(const Pair<double>& r) { m_Data.range = r; ConstrainValue(); }
 
 		/**
 		 * Get the range of this Parameter.
 		 * @return range
 		 */
-		virtual auto Range() -> Pair<double> const { return m_Range; }
+		virtual auto Range() -> Pair<double> const { return m_Data.range; }
 
 		/**
 		 * Set the value of this Parameter.
@@ -343,7 +374,7 @@ namespace SoundMixr
 		 * Get the value of this Parameter.
 		 * @return value
 		 */
-		virtual double Value() const { return Convert(m_Value); }
+		virtual double Value() { m_Data.enableSmoothing ? m_RValue += m_Data.smoothingAmount * (m_Value - m_RValue) : m_RValue = m_Value; return Convert(m_RValue); }
 
 		/**
 		 * Set the normalized value of this Parameter.
@@ -372,56 +403,56 @@ namespace SoundMixr
 		 * Get the default reset value of this Parameter.
 		 */
 		virtual double DefaultReset() { return m_DefaultReset; }
-
+		
 		/**
 		 * Set a Multiplier for the speed at which the parameter value
 		 * changes per pixel dragged with the mouse.
 		 * @param v multiplier
 		 */
-		virtual void Multiplier(double v) { m_Mult = v; }
+		virtual void Multiplier(double v) { m_Data.multiplier = v; }
 
 		/**
 		 * Get the Multiplier for the speed at which the parameter value
 		 * changes per pixel dragged with the mouse.
 		 * @return multiplier
 		 */
-		virtual double Multiplier() { return m_Mult; }
+		virtual double Multiplier() { return m_Data.multiplier; }
 
 		/**
 		 * Set a power to this parameter's value range, useful when a range
 		 * is non-linear.
 		 * @param v power
 		 */
-		virtual void Power(double v) { m_Power = v; }
+		virtual void ScalingType(ParameterData::Scaling t) { m_Data.scalingType = t; }
 
 		/**
 		 * Get the power to this parameter's value range.
 		 * @return power
 		 */
-		virtual double Power() { return m_Power; }
+		virtual ParameterData::Scaling ScalingType() { return m_Data.scalingType; }
 
 		/**
 		 * Make the range of this parameter logarithmic.
 		 * @param v log
 		 */
-		virtual void Log(double v) { m_Log = v; m_Logg = std::log(m_Log); }
+		virtual void Scaling(double v) { m_Data.scaling = v; }
 
 		/**
 		 * Get the power to this parameter's value range.
 		 * @return power
 		 */
-		virtual double Log() { return m_Log; }
+		virtual double Scaling() { return m_Data.scaling; }
 
 		/**
 		 * Is this parameter displayed/dragged vertically?
 		 */
-		virtual bool Vertical() { return m_Vertical; }
+		virtual bool Vertical() { return m_Data.vertical; }
 
 		/**
 		 * Is this parameter displayed/dragged vertically?
 		 * @param v vertical
 		 */
-		virtual void Vertical(bool v) { m_Vertical = v; }
+		virtual void Vertical(bool v) { m_Data.vertical = v; }
 
 		/**
 		 * Set a Unit to display behind the value of this Parameter.
@@ -442,37 +473,37 @@ namespace SoundMixr
 		 * Set the amount of decimals that should be displayed for this Parameter.
 		 * @param d decimals
 		 */
-		virtual void Decimals(int d) { m_Decimals = d; }
+		virtual void Decimals(int d) { m_Data.decimals = d; }
 
 		/**
 		 * Get the amount of decimals that will be displayed for this Parameter.
 		 * @return decimals
 		 */
-		virtual int Decimals() { return m_Decimals; }
+		virtual int Decimals() { return m_Data.decimals; }
 
 		/**
 		 * Returns true when the value should be displayed.
 		 * @return true when value should be displayed
 		 */
-		virtual bool DisplayValue() { return m_DisplayValue; }
+		virtual bool DisplayValue() { return m_Data.displayValue; }
 
 		/**
 		 * Enable/Disable the displaying of the value.
 		 * @param v display value
 		 */
-		virtual void DisplayValue(bool v) { m_DisplayValue = v; }
+		virtual void DisplayValue(bool v) { m_Data.displayValue = v; }
 
 		/**
 		 * Returns true when the name should be displayed.
 		 * @return true when value should be displayed
 		 */
-		virtual bool DisplayName() { return m_DisplayName; }
+		virtual bool DisplayName() { return m_Data.displayName; }
 
 		/**
 		 * Enable/Disable the displaying of the name.
 		 * @param v display name
 		 */
-		virtual void DisplayName(bool v) { m_DisplayName = v; }
+		virtual void DisplayName(bool v) { m_Data.displayName = v; }
 
 		/**
 		 * Returns true when this Parameter is disabled.
@@ -533,63 +564,56 @@ namespace SoundMixr
 
 	protected:
 		static inline double NODEFAULT = 10.1343131e30;
-		int m_Decimals = 1;
 
-		Pair<double> m_Range{ 0, 100 };
+		ParameterData m_Data;
 
-		double m_Value = 0,
-			m_Power = 1,
-			m_Log = -1,
-			m_Logg = 1,
+		double m_Value = 0, m_RValue = 0, 
 			m_ResetValue = 0,
-			m_DefaultReset = NODEFAULT,
-			m_Mult = 1;
+			m_DefaultReset = NODEFAULT;
 
-		bool m_Vertical = true,
-			m_DisplayValue = true,
-			m_DisplayName = true,
-			m_Disabled = false;
+		bool m_Disabled = false;
 
 		MidiCCLink m_MidiLink{ -1, -1, -1 };
 
-		std::string m_Name;
 		std::unordered_map<int, std::string> m_Units;
+
+		std::string m_Name;
 
 		const ParameterType m_Type;
 
 		void ConstrainValue() { m_Value = constrain(m_Value, 0, 1); }
-		//double Convert(double v) const { return std::powf(v, m_Power) * (m_Range.end - m_Range.start) + m_Range.start; }
-		//double Normalize(double v) const { auto a = std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power); return a; };
+
 		double Convert(double v) const
 		{
-			if (m_Log == -1)
-				return std::powf(v, m_Power) * (m_Range.end - m_Range.start) + m_Range.start;
+			if (m_Data.scalingType == ParameterData::Scaling::Pow)
+				return std::powf(v, m_Data.scaling) * (m_Data.range.end - m_Data.range.start) + m_Data.range.start;
 			else
 			{
 				static const auto mylog = [](double v, double b) { return std::log(v) / b; };
-				auto rs = m_Range.start;
-				auto re = m_Range.end;
+				auto rs = m_Data.range.start;
+				auto re = m_Data.range.end;
 				if (rs == 0)
 					rs = 0.00000000001;
 				if (re == 0)
 					re = 0.00000000001;
 				auto abs = v >= 0 ? v : -v;
+				auto logg = std::log(m_Data.scaling);
+				auto rslogg = mylog(rs, logg);
 
-				auto val = std::pow(m_Log, abs * (mylog(re, m_Logg) - mylog(rs, m_Logg)) + mylog(rs, m_Logg));
+				auto val = std::pow(m_Data.scaling, abs * (mylog(re, logg) - rslogg) + rslogg);
 				return v >= 0 ? val : -val;
 			}
-			//return ((std::powf(m_Log, v) - 1.0) / (m_Log - 1.0)) * (m_Range.end - m_Range.start) + m_Range.start;
 		}
 
 		double Normalize(double v) const
 		{
-			if (m_Log == -1)
-				return std::powf((v - m_Range.start) / (m_Range.end - m_Range.start), 1.0 / m_Power);
+			if (m_Data.scalingType == ParameterData::Scaling::Pow)
+				return std::powf((v - m_Data.range.start) / (m_Data.range.end - m_Data.range.start), 1.0 / m_Data.scaling);
 
 			static const auto mylog = [](double v, double b) { return std::log(v) / b; };
 
-			auto rs = m_Range.start;
-			auto re = m_Range.end;
+			auto rs = m_Data.range.start;
+			auto re = m_Data.range.end;
 			if (rs == 0)
 				rs = 0.00000000001;
 			if (re == 0)
@@ -598,17 +622,12 @@ namespace SoundMixr
 			if (v == 0)
 				v = 0.00000000001;
 
-			auto log = v >= 0 ? mylog(v, m_Logg) : mylog(-v, m_Logg);
+			auto logg = std::log(m_Data.scaling);
+			auto rslogg = mylog(rs, logg);
+			auto log = v >= 0 ? mylog(v, logg) : mylog(-v, logg);
 
-			auto norm1 = (log - mylog(rs, m_Logg)) / (mylog(re, m_Logg) - mylog(rs, m_Logg));
+			auto norm1 = (log - rslogg) / (mylog(re, logg) - rslogg);
 			return v >= 0 ? norm1 : -norm1;
-
-
-			//float norm = ((v - m_Range.start) / (m_Range.end - m_Range.start)) * (m_Log - 1.0) + 1.0;
-			//norm = norm > 0 ? norm : 0.0000000001;
-
-			//return std::log(norm) / std::log(m_Log);
-
 		};
 	};
 
@@ -623,7 +642,7 @@ namespace SoundMixr
 			: Parameter("Volume", ParameterType::VolumeSlider)
 		{
 			Name("Volume");
-			DisplayName(false);
+			m_Data.displayName = false;
 		}
 
 		/**
