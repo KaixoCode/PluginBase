@@ -191,11 +191,11 @@ public:
 		// Window the ideal response with the Kaiser-Bessel window
 		double _i0alpha = I0(_alpha);
 		for (int j = 0; j <= _np; j++)
-			H[_np + j] = A[j] * I0(_alpha * std::sqrt(1.0 - ((double)j * (double)j / (_np * _np)))) / _i0alpha;
+			this->H[_np + j] = A[j] * I0(_alpha * std::sqrt(1.0 - ((double)j * (double)j / (_np * _np)))) / _i0alpha;
 
 		// It is mirrored so other half is same
 		for (int j = 0; j < _np; j++)
-			H[j] = H[M - 1 - j];
+			this->H[j] = this->H[M - 1 - j];
 	}
 
 	// This function calculates the zeroth order Bessel function
